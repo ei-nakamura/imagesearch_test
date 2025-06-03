@@ -1,74 +1,39 @@
-import { useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>カメラ画像検索アプリ</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>カメラ画像検索</h1>
 
-export default function ImageSearchApp() {
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
-  const [image, setImage] = useState(null);
-  const [searchUrl, setSearchUrl] = useState(null);
+        <div id="error-message" class="error"></div>
+        <div id="status-message" class="status"></div>
 
-  // カメラ起動
-  const startCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-    } catch (error) {
-      console.error("カメラの起動に失敗しました", error);
-    }
-  };
+        <div class="controls">
+            <button id="toggleCameraButton">カメラ起動</button>
+            <select id="cameraSelectList" style="display: none; margin-left: 10px;"></select>
+        </div>
 
-  // 画像をキャプチャ
-  const captureImage = () => {
-    if (!videoRef.current || !canvasRef.current) return;
-    const context = canvasRef.current.getContext("2d");
-    context.drawImage(videoRef.current, 0, 0, 300, 200);
-    const imageData = canvasRef.current.toDataURL("image/png");
-    setImage(imageData);
-  };
+        <div class="camera-view">
+            <video id="videoElement" autoplay playsinline></video>
+            <canvas id="canvasElement"></canvas>
+        </div>
 
-  // Google画像検索を実行
-  const searchImage = () => {
-    if (!image) return;
-    const blob = dataURItoBlob(image);
-    const file = new File([blob], "search.png", { type: "image/png" });
-    const formData = new FormData();
-    formData.append("encoded_image", file);
-    formData.append("image_content", "" );
-    
-    const googleSearchUrl = "https://www.google.com/searchbyimage/upload";
-    fetch(googleSearchUrl, {
-      method: "POST",
-      body: formData,
-    }).then(() => setSearchUrl(googleSearchUrl));
-  };
+        <div class="controls">
+            <button id="captureButton" disabled>撮影</button>
+            <button id="searchButton" disabled>画像で検索 (Google)</button>
+        </div>
 
-  // Data URI を Blob に変換
-  const dataURItoBlob = (dataURI) => {
-    const byteString = atob(dataURI.split(",")[1]);
-    const mimeString = dataURI.split(",")[0].split(":")[1].split(";")[0];
-    const arrayBuffer = new ArrayBuffer(byteString.length);
-    const intArray = new Uint8Array(arrayBuffer);
-    for (let i = 0; i < byteString.length; i++) {
-      intArray[i] = byteString.charCodeAt(i);
-    }
-    return new Blob([arrayBuffer], { type: mimeString });
-  };
-
-  return (
-    <div className="flex flex-col items-center gap-4 p-4">
-      <video ref={videoRef} autoPlay className="w-72 h-48 border" />
-      <canvas ref={canvasRef} width={300} height={200} className="hidden" />
-      <div className="flex gap-2">
-        <Button onClick={startCamera}>カメラを起動</Button>
-        <Button onClick={captureImage}>写真を撮る</Button>
-        <Button onClick={searchImage} disabled={!image}>Googleで検索</Button>
-      </div>
-      {image && <img src={image} alt="Captured" className="w-48 h-auto border" />}
-      {searchUrl && (
-        <a href={searchUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500">検索結果を開く</a>
-      )}
+        <p class="notes">
+            <strong>注意:</strong> カメラ機能を利用するには、このページがHTTPSで提供されている必要があります。
+            また、ブラウザからカメラへのアクセス許可を求められます。
+        </p>
     </div>
-  );
-}
+
+    <script src="script.js"></script>
+</body>
+</html>
